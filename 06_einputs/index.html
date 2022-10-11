@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<title>PS70: Intro to Digital Fabrication </title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../style.css" rel="stylesheet">
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/arduino-light.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/arduino.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script> 
+
+<nav class="navbar navbar-expand-sm navbar-light bg-light">
+  <div style="align-items: left; justify-content:left;" class="container-fluid">
+    <h3 class="nav-title"> PS70: Intro to Digital Fabrication</h3>
+    <div class="navbar-nav">
+      <h4></h4>
+      <h4><a class="nav-link" href="../index.html">Home</a></h4>
+      <h4><a class="nav-link" href="../about.html">About</a></h4>
+      <!-- two dots - go out a level -->
+    </div>
+  </div>
+</nav>
+
+
+<body>
+
+
+<xmp style="display:none;">
+<br> 
+
+#### Week 5: Microcontroller Programming
+
+This week, I used Arduino IDE to make circuits and motors do cool things!
+
+I had already worked with Arduino once before, so this week was a bit of a throwback for me. But still, that was in 2015, so it's good to be back. Back then, I used it to power a Servo which powered a homemade robot.
+
+I was able to do several different things with the microcontroller, including LED flashes, powering and changing directions/speeds of a servo motor and a DC motor, and I even incorporated a potentiometer to do so.
+
+Here, I'll share how I set up my breadboard, microcontroller, and other elements to do LED flashes and to power a Servo motor.
+
+
+<h5>Blink on a breadboard</h5>
+
+I used the following simple setup with a breadboard to make an LED blink. Here's a schematic and a video of the setup and blinking.
+
+<br>
+<img src='SimpleCircuit.jpg' width="300px" position="relate">
+<br>
+
+<video width="800px" controls>
+  <source src="BlinkVid.mp4" type="video/mp4">
+  </video>
+
+<br>
+
+<h5>Blink Code</h5>
+
+Here's the code I used (woohoo, no delays here):
+<pre><code class="language-arduino">
+const int ledPin =  12;      // the number of the LED pin
+
+// Variables will change:
+int ledState = LOW;             // ledState used to set the LED
+long previousMillis = 0;        // will store last time LED was updated
+
+// the follow variables is a long because the time, measured in miliseconds,
+// will quickly become a bigger number than can be stored in an int.
+long interval = 1000;           // interval at which to blink (milliseconds)
+
+void setup() {
+  // set the digital pin as output:
+  pinMode(ledPin, OUTPUT);      
+}
+
+void loop()
+{
+  unsigned long currentMillis = millis();
+ 
+  if(currentMillis - previousMillis > interval) {
+    // save the last time you blinked the LED 
+    previousMillis = currentMillis;   
+
+    // if the LED is off turn it on and vice-versa:
+    if (ledState == LOW)
+      ledState = HIGH;
+    else
+      ledState = LOW;
+
+    // set the LED with the ledState of the variable:
+    digitalWrite(ledPin, ledState);
+  }
+}
+</code></pre> 
+
+<br>
+
+Here's another way of coding the same thing, just with a more object-oriented programming lens. By making a class called Flasher and a function called led.update(), I could now add additional LEDs to the circuit without having to copy and paste many lines of code.
+
+<pre><code class="language-arduino">
+class Flasher
+{
+  int ledPin;
+  long OnTime;
+  long OffTime;
+
+  int ledState;
+  unsigned long previousMillis;
+
+  public:
+  Flasher(int pin, long on, long off)
+  {
+    ledPin = pin;
+    OnTime = on;
+    OffTime = off;
+
+    ledState = LOW;
+    previousMillis = 0;
+  }
+
+  void update(){
+    unsigned long currentMillis = millis();
+    if ((ledState == HIGH) && (currentMillis - previousMillis >= OnTime)) {
+      ledState = LOW;
+      previousMillis = currentMillis;
+      digitalWrite(ledPin, ledState);
+    }
+  }
+};
+
+Flasher led1(12, 1000, 1000);
+
+void setup() {
+}
+
+void loop() {
+  led1.update();
+}
+  </code></pre> 
+
+
+<h5>Servo Time! (With L9110 motor driver)</h5>
+
+I also used the microcontroller to power a Servo, using an L9110 motor driver as well. I hooked up the brown ground wire and the red wire on the Servo to the Motor A ports on the motor driver using a screwdriver. Then I connected the grounds between the motor driver and the microcontroller, and I connected the VCC port on the motor driver to the 3.3V on the microcontroller.
+
+<br>
+<img src='Servo.jpg' width="600px" position="relate">
+<br>
+
+I was able to control the speed of the Servo using the potentiometer as well, using the following code:
+
+<pre><code class="language-arduino">
+  #include <Servo.h>
+    Servo myservo
+    int pos = 0;
+    int potpin = 0;
+    int val;
+    
+    
+    void setup() {
+    myservo.attach(3);
+    }
+    
+    void loop() {
+    val = analogRead(potpin);
+    val = map(val, 0, 1023, 0, 180);
+    myservo.write(val);
+    delay(15);
+    }
+</code></pre>
+
+
+I did the same thing with a DC motor, hooking it up with pins 3 and 4 on the microcontroller, and I could change its speeds as well as its direction with the following code:
+
+<pre><code class="language-arduino">
+  const int A1A = 3;  // define pin 3 for A-1A (PWM Speed)
+  const int A1B = 4;  // define pin 4 for A-1B (direction)
+  
+  void setup() {
+    pinMode(A1A, OUTPUT);     // specify these pins as outputs
+    pinMode(A1B, OUTPUT);
+    analogWrite(A1A, 0);   // start with the motors off 
+    digitalWrite(A1B, LOW);
+  }
+  
+  void loop() {
+    // start the motor at a low speed
+    analogWrite(A1A, 150);
+    digitalWrite(A1B, LOW);
+    delay(4000);              // allow the motor to run for 4 seconds
+  
+    // opposite direction at the same speed
+    digitalWrite(A1B, HIGH);  // switch direction
+    analogWrite(A1A, 255-150); // here the logic for speed is inverted
+    delay(4000);              // allow the motor to run for 4 seconds
+  
+    // speed up the motor
+    analogWrite(A1A, 0);
+    delay(2000);
+  }
+</code></pre>
+
+<br>
+<h5>Takeaways</h5>
+
+All in all, these microcontrollers are pretty powerful little guys (and fun, too). I think I'll definitely be relying on them for my final project somehow (automatic plant waterer).
+<br>
+
+Click [here](../index.html) to return to the homepage.
+
+
+</xmp>
+</body>
+
+<script src="../strapdown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" ></script>
+
+</html>
