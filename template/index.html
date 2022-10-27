@@ -30,68 +30,23 @@
 <xmp style="display:none;">
 <br> 
 
-#### Week 7: Electronic Output Devises
+#### Week #: Theme
 
 
-WORK IN PROGRESS - I will be late for this week, sorry!
-
-This week, I made working circuits incorporating electronic output devices, including an RGB LED.
+This week, I ...
 
 
-<h5>Setup</h5>
+<h5>Header</h5>
 <video width="800px" controls>
   <source src="LED_output.mp4" type="video/mp4">
   </video>
 
-<h5>Code</h5>
-
-<pre><code class="language-arduino">
-  void reset(){
-    digitalWrite(8, LOW);
-    digitalWrite(9, LOW);
-    digitalWrite(10, LOW);
-  }
   
-  void combos(int x){
-   digitalWrite(8, HIGH);
-   digitalWrite(10, HIGH);
-   delay(x);
-   reset();
-   digitalWrite(8, HIGH);
-   digitalWrite(9, HIGH);
-   delay(x);
-   reset();
-   digitalWrite(9, HIGH);
-   digitalWrite(10, HIGH);
-   delay(x);
-   reset();
-  }
-  
-  void rgb(int x){
-   digitalWrite(8, HIGH);   // turn on red channel
-   delay(x);              // delay 
-   reset();
-   digitalWrite(9, HIGH);  // turn on green channel
-   delay(x);
-   reset();
-   digitalWrite(10, HIGH);  // turn on green channel
-   delay(x);
-   reset();
-  }
-  
-  void setup() {
-    pinMode(9, OUTPUT);   // red
-    pinMode(10, OUTPUT);  // green
-    pinMode(8, OUTPUT);  // blue  
-  }
-  
-  void loop() {
-   rgb(5000);
-   combos(5000);
-   delay(3000);
-  }
-</code></pre> 
 <br>
+<img src='rgb_setup.jpg' width="600px" position="relate">
+<br>
+
+<h5>Code</h5>
 
 <pre><code class="language-arduino">
   void setup() {
@@ -109,15 +64,6 @@ This week, I made working circuits incorporating electronic output devices, incl
   }
 </code></pre> 
 <br>
-
-<br>
-<img src='rgb_setup.jpg' width="600px" position="relate">
-<br>
-<br>
-
-<h5>Oscilloscope</h5>
-
-Attach video here
 
 
 <br>
