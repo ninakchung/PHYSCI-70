@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<title>PS70: Intro to Digital Fabrication </title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../style.css" rel="stylesheet">
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/arduino-light.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/arduino.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script> 
+
+<nav class="navbar navbar-expand-sm navbar-light bg-light">
+  <div style="align-items: left; justify-content:left;" class="container-fluid">
+    <h3 class="nav-title"> PS70: Intro to Digital Fabrication</h3>
+    <div class="navbar-nav">
+      <h4></h4>
+      <h4><a class="nav-link" href="../index.html">Home</a></h4>
+      <h4><a class="nav-link" href="../about.html">About</a></h4>
+      <!-- two dots - go out a level -->
+    </div>
+  </div>
+</nav>
+
+
+<body>
+
+
+<xmp style="display:none;">
+<br> 
+
+#### Week 7: Electronic Output Devises
+
+
+WORK IN PROGRESS - I will be late for this week, sorry!
+
+This week, I made working circuits incorporating electronic output devices, including an RGB LED.
+
+
+<h5>Setup</h5>
+<video width="800px" controls>
+  <source src="LED_output.mp4" type="video/mp4">
+  </video>
+
+<h5>Code</h5>
+
+<pre><code class="language-arduino">
+  void reset(){
+    digitalWrite(8, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(10, LOW);
+  }
+  
+  void combos(int x){
+   digitalWrite(8, HIGH);
+   digitalWrite(10, HIGH);
+   delay(x);
+   reset();
+   digitalWrite(8, HIGH);
+   digitalWrite(9, HIGH);
+   delay(x);
+   reset();
+   digitalWrite(9, HIGH);
+   digitalWrite(10, HIGH);
+   delay(x);
+   reset();
+  }
+  
+  void rgb(int x){
+   digitalWrite(8, HIGH);   // turn on red channel
+   delay(x);              // delay 
+   reset();
+   digitalWrite(9, HIGH);  // turn on green channel
+   delay(x);
+   reset();
+   digitalWrite(10, HIGH);  // turn on green channel
+   delay(x);
+   reset();
+  }
+  
+  void setup() {
+    pinMode(9, OUTPUT);   // red
+    pinMode(10, OUTPUT);  // green
+    pinMode(8, OUTPUT);  // blue  
+  }
+  
+  void loop() {
+   rgb(5000);
+   combos(5000);
+   delay(3000);
+  }
+</code></pre> 
+<br>
+
+<pre><code class="language-arduino">
+  void setup() {
+    Serial.begin(9600);
+    pinMode(9, OUTPUT);   // red
+    pinMode(10, OUTPUT);  // green
+    pinMode(8, OUTPUT);  // blue  
+  }
+  
+  void loop() {
+      // read the input on analog pin 1:
+      int sensorValue = analogRead(A1);
+      // map to RGB values
+      //turn on different colors based on light input
+  }
+</code></pre> 
+<br>
+
+<br>
+<img src='rgb_setup.jpg' width="600px" position="relate">
+<br>
+<br>
+
+<h5>Oscilloscope</h5>
+
+Attach video here
+
+
+<br>
+<h5>Takeaways</h5>
+<br>
+
+<br>
+
+Click [here](../index.html) to return to the homepage.
+
+
+</xmp>
+</body>
+
+<script src="../strapdown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" ></script>
+
+</html>

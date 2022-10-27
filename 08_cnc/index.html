@@ -30,100 +30,67 @@
 <xmp style="display:none;">
 <br> 
 
-#### Week 7: Electronic Output Devises
+#### Week 8: CNC Milling, Molding & Casting
 
+This week, I made something with CNC (ShopBot) and with molding and casting (SRM-20).
 
-WORK IN PROGRESS - I will be late for this week, sorry!
+<h5>CNC</h5>
 
-This week, I made working circuits incorporating electronic output devices, including an RGB LED.
-
-
-<h5>Setup</h5>
-<video width="800px" controls>
-  <source src="LED_output.mp4" type="video/mp4">
-  </video>
-
-<h5>Code</h5>
-
-<pre><code class="language-arduino">
-  void reset(){
-    digitalWrite(8, LOW);
-    digitalWrite(9, LOW);
-    digitalWrite(10, LOW);
-  }
-  
-  void combos(int x){
-   digitalWrite(8, HIGH);
-   digitalWrite(10, HIGH);
-   delay(x);
-   reset();
-   digitalWrite(8, HIGH);
-   digitalWrite(9, HIGH);
-   delay(x);
-   reset();
-   digitalWrite(9, HIGH);
-   digitalWrite(10, HIGH);
-   delay(x);
-   reset();
-  }
-  
-  void rgb(int x){
-   digitalWrite(8, HIGH);   // turn on red channel
-   delay(x);              // delay 
-   reset();
-   digitalWrite(9, HIGH);  // turn on green channel
-   delay(x);
-   reset();
-   digitalWrite(10, HIGH);  // turn on green channel
-   delay(x);
-   reset();
-  }
-  
-  void setup() {
-    pinMode(9, OUTPUT);   // red
-    pinMode(10, OUTPUT);  // green
-    pinMode(8, OUTPUT);  // blue  
-  }
-  
-  void loop() {
-   rgb(5000);
-   combos(5000);
-   delay(3000);
-  }
-</code></pre> 
+I used ShopBot to make a wooden cutout with my initials engraved in it.
+<img src='initials.jpg' width="600px" position="relate">
+<br>
+The overall process was pretty smooth. I attached the wood to the ShopBot, designed the shapes I wanted to cut and engrave, added tabs, and specified cut order, specifying the inside shapes to cut first. Then I did an aircut at a higher z, and finally cut the real shape. It came out pretty well, though it was a little rough around the edges (mostly because of the material it was cut from).
 <br>
 
-<pre><code class="language-arduino">
-  void setup() {
-    Serial.begin(9600);
-    pinMode(9, OUTPUT);   // red
-    pinMode(10, OUTPUT);  // green
-    pinMode(8, OUTPUT);  // blue  
-  }
-  
-  void loop() {
-      // read the input on analog pin 1:
-      int sensorValue = analogRead(A1);
-      // map to RGB values
-      //turn on different colors based on light input
-  }
-</code></pre> 
+<h5>Molding & Casting</h5>
+
+For my mold, I originally wanted to make a medallion with something engraved on it. I created a design in Fusion 360, see below, using the dimensions of my wax block as a basis for the design.
+<br>
+<img src='FusionMold.png' width="400px" position="relate">
+<br>
+Then I took it to the SRM-20. In a similar process as with the ShopBot, I attached my wax block to the machine's platform with double-sided tape, uploaded my file to the mods website, and adjusted the xyz and bit size, following the tutorials on the course website.
+
+I did a roughing pass with the 1/8" bit, giving the following result (the letters didn't show up yet):
+<br>
+<img src='wax.jpg' width="600px" position="relate">
+<br>
+When I switched the bit to 1/16", the interface kept crashing and wouldn't upload. Ibrahim was troubleshooting with me, and he realized the bit was too wide to get inside the text engraving, causing the mods to crash.
+<br>
+<img src='bitwithletters.png' width="600px" position="relate">
+<br>
+I thought about making the letters bigger, but I had to run to class at the time. I didn't want to have to exactly realign the machine so could engrave it in exactly the right place in the circle that had already been made, because I'd risk it not being perfectly centered, which would annoy me (I know myself). Instead, I decided to just go with the medal with no engraving, because it would be cool to be able to have a medal anyway.
+
+Wearing vinyl gloves and eye protection, I mixed the smooth-on mixtures in a cup. I definitely poured too much of B in, so I had to balance it with more of A and then made way more mixture than I needed, my bad...
+<br>
+<img src='cup.jpg' width="600px" position="relate">
+<br>
+Then I poured the mold mixture into the wax mold I had made, tapping it to get the air bubbles out. Then I waited a good 2-3 hours for it to cure.
+<br>
+<img src='mold.jpg' width="600px" position="relate">
 <br>
 
-<br>
-<img src='rgb_setup.jpg' width="600px" position="relate">
-<br>
-<br>
 
-<h5>Oscilloscope</h5>
 
-Attach video here
 
+Here's the mold after curing.
+<br>
+<img src='curedmold.jpg' width="600px" position="relate">
+<br>
+Then I melted the metal in the toaster (!) and poured it into the mold.
+<br>
+<img src='metalinmold.jpg' width="600px" position="relate">
+<br>
+Finished product: a medal, out of metal! Whoa!
+<br>
+<img src='medal.jpg' width="600px" position="relate">
+<br>
 
 <br>
 <h5>Takeaways</h5>
 <br>
+This was a very cool unit! I didn't really know what to expect with it, as I'd never heard of CNC before. I think it would've been a lot harder had I tried to make something truly 3D (i.e. having to make 2 molds and put them together to make something double-sided). I definitely understand the appeal of using molds as opposed to 3D printing (for mass production).
 
+I'm hoping to try to make something even cooler in the future with these machines when I have a little more time (it's a busy show/event prep week for me). Proud of my medal, even if it isn't engraved like I originally hoped.
 <br>
 
 Click [here](../index.html) to return to the homepage.
