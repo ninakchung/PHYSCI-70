@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<title>PS70: Intro to Digital Fabrication </title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../style.css" rel="stylesheet">
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/arduino-light.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/arduino.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script> 
+
+<nav class="navbar navbar-expand-sm navbar-light bg-light">
+  <div style="align-items: left; justify-content:left;" class="container-fluid">
+    <h3 class="nav-title"> PS70: Intro to Digital Fabrication</h3>
+    <div class="navbar-nav">
+      <h4></h4>
+      <h4><a class="nav-link" href="../index.html">Home</a></h4>
+      <h4><a class="nav-link" href="../about.html">About</a></h4>
+      <!-- two dots - go out a level -->
+    </div>
+  </div>
+</nav>
+
+
+<body>
+
+
+<xmp style="display:none;">
+<br> 
+
+#### Week 9: Wifi/Bluetooth/IOT
+
+
+This week, I tried to make two ESP32s communicate. 
+
+Our original goal was to scrape a cat fact from the cat facts API and display that on the screen connected to Allison's ESP32 when a button was pressed. However, the cat facts API required authentication, so we switched to a random facts API with no required authentication instead.
+
+We were set to have one ESP32 send a signal to the other, which would activate a screen to display a random fact.
+
+We 3D printed a model of a cat to go with it, which was supposed to be holding the button, but we didn't end up being able to hook it up to the circuit in time.
+
+
+<h5>ESP32 Setup</h5>
+<br>
+Using code from a [RandomNerd tutorial](https://randomnerdtutorials.com/esp-now-two-way-communication-esp32/) as a template, I coded up a script that sends a signal to Allison's ESP 32.
+
+<br>
+<img src='esp32.jpg' width="600px" position="relate">
+<br>
+
+<h5>ESP32-NOW Code</h5>
+<pre><code class="language-arduino">
+  #include <esp_now.h>
+    #include <WiFi.h>
+    #include <HTTPClient.h>
+    #include <ArduinoJson.h>
+    #include <Wire.h>
+    #include <Adafruit_GFX.h>
+    #include <Adafruit_SSD1306.h>
+    
+    // REPLACE WITH THE MAC Address of your receiver 
+    uint8_t broadcastAddress[] = {0xEC, 0x62, 0x60, 0x91, 0x94, 0xA8}; //Allison's ESP address
+    
+    const String endpoint = "https://uselessfacts.jsph.pl/random.json?language=en";
+    
+    String OGcatfact = "Cats have 9 lives.";
+    
+    //CAT FACT RETRIEVE
+    //go to cat fact API and get a random cat fact... returning a default 9 lives fact for now as a placeholder
+    //maybe something like char catfact = getcatfact();
+    
+    // Define variables to store fact to be sent
+    String pushagain = "Push button for more facts!";
+    
+    // This ESP is only sending to Allison's ESP, not receiving anything back
+    
+    // Variable to store if sending data was successful
+    String success;
+    
+    //Structure example to send data
+    //Must match the receiver structure
+    typedef struct struct_message {
+        String catfact;
+        String pushagain;
+    } struct_message;
+    
+    // Create a struct_message to hold message with new fact
+    struct_message FactMessage;
+    
+    esp_now_peer_info_t peerInfo;
+    
+    // Callback when data is sent
+    void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+      Serial.print("\r\nLast Packet Send Status:\t");
+      Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+      if (status ==0){
+        success = "Delivery Success :)";
+      }
+      else{
+        success = "Delivery Fail :(";
+      }
+    }
+    
+     
+    void setup() {
+      Serial.begin(115200);
+      Serial.println("Setting up");
+      // Set device as a Wi-Fi Station
+      WiFi.mode(WIFI_STA);
+    
+      // Init ESP-NOW
+      if (esp_now_init() != ESP_OK) {
+        Serial.println("Error initializing ESP-NOW");
+        return;
+      }
+    
+      // Once ESPNow is successfully Init, we will register for Send CB to
+      // get the status of Transmitted packet
+      esp_now_register_send_cb(OnDataSent);
+      
+      // Register peer
+      memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+      peerInfo.channel = 0;
+      peerInfo.encrypt = false;
+      
+      // Add peer        
+      if (esp_now_add_peer(&peerInfo) != ESP_OK){
+        Serial.println("Failed to add peer");
+        return;
+      }
+    }
+     
+    void loop() {
+      Serial.println("Starting loop");
+    
+      //getReadings();
+      //getcatfact(); 
+      // // Set values to send
+      FactMessage.catfact = OGcatfact;
+      //FactMessage.pushagain = pushagain;
+    
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &FactMessage, sizeof(FactMessage));
+       
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+        Serial.println(FactMessage.catfact);
+        Serial.println(pushagain);
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+      delay(10000);
+    }
+</code></pre> 
+<br>
+
+
+<br>
+<h5>Takeaways</h5>
+<br>
+Wifi is hard. Bluetooth is harder. Perhaps the hardest thing is working with others.
+<br>
+
+Click [here](../index.html) to return to the homepage.
+
+
+</xmp>
+</body>
+
+<script src="../strapdown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" ></script>
+
+</html>
