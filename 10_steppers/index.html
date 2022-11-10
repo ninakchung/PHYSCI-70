@@ -35,9 +35,9 @@
 This week, I constructed a turntable I could use for my final project.
 
 
-<h5>Header</h5>
-<br>
-The first step was to wire up the stepper motor correctly. I did this using a L9110 motor driver, following the tutorials on the course website.
+<h5>Setting Up the Stepper</h5>
+
+The first step was to wire up the stepper motor correctly. I used a Nema 17 Bipolar 1.8deg 26Ncm (36.8oz.in) 0.4A 12V 42x42x34mm stepper motor with four wires, and I hooked it up using a L9110 motor driver following the tutorials on the course website.
 <br>
 <img src='wiring.jpg' width="600px" position="relate">
 <br>
@@ -51,15 +51,17 @@ Here are some images of the laser cutting process and the box.
 <br>
 <img src='laser-cutting.jpg' width="600px" position="relate">
 <br>
+<br>
 <img src='box.jpg' width="600px" position="relate">
 <br>
-
+<br>
 <h5>Code</h5>
 <br>
+
 Here's the code I used to move the motor clockwise, step by step. The delay makes it so the motor steps once every 0.3 seconds and completes one full rotation every minute.
 
 <pre><code class="language-arduino">
-int Aplus = 11;
+  int Aplus = 11;
 int Aminus = 10;
 int Bplus = 9;
 int Bminus = 8;
@@ -120,18 +122,24 @@ void loop() {
  }
 </code></pre> 
 <br>
+
 After getting the motor working, I tried to secure the gear and platform to the stepper motor axle. However, it was super hard to get it level.
 I ended up supergluing the gear to the platform and placing that on top of the rotating motor, which worked miraculously leveled it out.
+
 <br>
 <img src='top-off.jpg' width="600px" position="relate">
 <br>
+
 Here's the assembled turntable:
 <br>
 <img src='turntable.jpg' width="600px" position="relate">
 <br>
+
 <br>
 
-<h5>Turntable in action</h5>
+<h5>Turntable in Action</h5>
+
+
 Here's a video of the turntable in action:
 <br>
 <video width="800px" controls>
@@ -139,13 +147,16 @@ Here's a video of the turntable in action:
   </video>
 
 And here's a video of my whale shark from Week 3 on the turntable. I think this is a much better kinetic sculpture than the one I did back in Week 3!
-  <video width="800px" controls>
+  <video width="600px" controls>
   <source src="whaleshark-turning.mp4" type="video/mp4">
   </video>
 <br>
 <h5>Takeaways</h5>
-<br>
-The biggest issue I had with this was that the turntable stops moving with any significant weight placed on it, so this turntable wouldn't actually work for my final project if I want to put a plant on top of it.
+
+
+The biggest issue I encountered was that the turntable stops moving with any significant weight placed on it, so this turntable wouldn't actually work for my final project if I want to put a plant on top of it.
+I didn't get a chance to orient the turntable to the same spot every time I turned the motor on, but I could feasibly do so by adding a one-way stopper on the turntable, such that when the stopper collides with a starting mark attached to the box, the motor no longer can rotate, so it resets to wherever that starting mark is.
+
 I'm hoping to modify this design to look into ways to increase the torque so it can handle more weight. I also want to be able to change the direction of the turntable at fixed, longer intervals (2 days) in response to an input, like light values from a photoresistor.
 <br>
 
