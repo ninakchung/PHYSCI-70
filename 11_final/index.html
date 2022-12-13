@@ -30,46 +30,328 @@
 <xmp style="display:none;">
 <br> 
 
-#### Week #: Theme
+<h2>Final Project: Automatic Plant Waterer</h2>
 
-
-This week, I ...
-
-
-<h5>Header</h5>
 <video width="800px" controls>
-  <source src="LED_output.mp4" type="video/mp4">
-  </video>
+  <source src="fulldemo.mp4" type="video/mp4">
+</video>
+<!-- replace with official demo video -->
 
+<br>
+
+Welcome to my final project! I made an automatic plant waterer to use while I'm away for winter break.
+
+<br>
+<img src='birdseyesetup.jpg' width="600px" position="relate">
+<br>
+<br>
+
+<h3>How it works</h3>
+
+I used an ESP32 to control a pump (for watering) and a fabricated turntable (for rotating the plant on sunny days). The frequency of turning depends on the amount of light detected by a photoresistor, and the frequency of watering depends on inputs from a web interface that I made, which communiates to the ESP32 through Firebase. Manipulating the web interface updates values in the database, which then are periodically fetched by the code that is continuously looped by the ESP32.
+<br>
+<img src='sideview.jpg' width="800px" position="relate">
+<br>
+The turntable is powered by a Nema 17 Bipolar 1.8deg 26Ncm (36.8oz.in) 0.4A 12V 42x42x34mm stepper motor, which I hooked up to a L9110 motor driver following the [tutorials on the course website](https://nathanmelenbrink.github.io/ps70/10_machines/index.html). The motor and motor driver are hidden under the box part of the turntable, but the wires come out a hole in the side to connect to the external breadboard with the ESP32.
+<br>
+Here's the code I ultimately ended up running with the ESP32. For demo purposes, it's presented here with shortened time intervals (actual values are noted in comments when applicable).
+<pre><code class = "language-arduino">
+  #include <FirebaseESP32.h>
+  #include <WiFi.h>
+  #define WIFI_SSID "MAKERSPACE"
+  #define WIFI_PASSWORD "12345678"
   
-<br>
-<img src='rgb_setup.jpg' width="600px" position="relate">
-<br>
-
-<h5>Code</h5>
-
-<pre><code class="language-arduino">
+  // Insert Firebase project API Key
+  #define FIREBASE_AUTH "AIzaSyBBoCe4WbiV_CF_Wn2DCn88BemzeozxDrQ"
+  // Insert RTDB URLefine the RTDB URL
+  #define FIREBASE_HOST "https://ps70-plant-control-default-rtdb.firebaseio.com/" 
+  
+      String fireString = "";                                          // status received from firebase
+      int fireInt = 7;
+      int outputpin = 14;
+  
+      //Define FirebaseESP32 data object
+      FirebaseData firebaseData;
+  
+      FirebaseAuth auth;
+      FirebaseConfig config;
+  
+      unsigned long sendDataPrevMillis = 0;
+      int minutes = 0;
+      int photo = 4000;
+      int photomax = 3900;
+      bool signupOK = true;
+      int Aplus = 12;
+      int Aminus = 13;
+      int Bplus = 15;
+      int Bminus = 2;
+      int readout = 36;
+      int days_since_watered = 0;
+  
+      uint16_t step_count = 0;
+  
+      void pulse_0(){
+    digitalWrite(Aplus,1);
+    digitalWrite(Bplus,1);
+  }
+  
+  void pulse_1(){
+    digitalWrite(Aminus,1);
+    digitalWrite(Bplus,1);
+  }
+  
+  void pulse_2(){
+    digitalWrite(Aminus,1);
+    digitalWrite(Bminus,1);
+  }
+  
+  void pulse_3(){
+    digitalWrite(Aplus,1);
+    digitalWrite(Bminus,1);
+  }
+  
+  void all_off() {
+    digitalWrite(Aplus,0);
+    digitalWrite(Aminus,0);
+    digitalWrite(Bplus,0);
+    digitalWrite(Bminus,0);
+  }
+  
+  void turn_motor() { // turn platform approx. 120 degrees clockwise
+    for (int i = 0; i <= 80; i++){
+    all_off(); // turn off coils before sending new step.
+  
+    step_count++;
+    step_count = step_count%4;
+  
+    if (step_count == 0) pulse_0();
+    if (step_count == 1) pulse_1();
+    if (step_count == 2) pulse_2();
+    if (step_count == 3) pulse_3();  
+  
+    delay(30);  // too short and motor will skip steps
+    }
+  }
+  
+  void water() {
+    analogWrite(outputpin, 200);
+    delay(10000); // *180000 water 1 cup (~3 minutes)
+    analogWrite(outputpin, 0);
+  }
+  
   void setup() {
-    Serial.begin(9600);
-    pinMode(9, OUTPUT);   // red
-    pinMode(10, OUTPUT);  // green
-    pinMode(8, OUTPUT);  // blue  
+    Serial.begin(115200);
+    delay(1000);
+    pinMode(Aplus, OUTPUT);
+    pinMode(Aminus, OUTPUT);
+    pinMode(Bplus, OUTPUT);
+    pinMode(Bminus, OUTPUT);
+    pinMode(outputpin, OUTPUT);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);                          // try to connect with wifi
+  
+    Serial.print("Connecting to ");
+    Serial.print(WIFI_SSID);
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.print(".");
+      delay(500);
+    }
+  
+    Serial.println();
+    Serial.print("Connected to ");
+    Serial.println(WIFI_SSID);
+    Serial.print("IP Address is : ");
+    Serial.println(WiFi.localIP());                                // print local IP address
+    Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);                  // connect to firebase
+    Firebase.reconnectWiFi(true);
+    Firebase.set(firebaseData, "/WATERING_STATUS", "OFF");              // set initial string of "OFF"
+    Firebase.set(firebaseData, "/WATERING_INTERVAL", "7");
+    Firebase.set(firebaseData, "/DAYS_SINCE_WATERED", "0");
+    Firebase.set(firebaseData, "/LIGHT", "4095");
   }
   
   void loop() {
-      // read the input on analog pin 1:
-      int sensorValue = analogRead(A1);
-      // map to RGB values
-      //turn on different colors based on light input
-  }
-</code></pre> 
-<br>
+    Firebase.get(firebaseData, "/WATERING_STATUS");                     // get watering status input from firebase
+    fireString = firebaseData.stringData();                        // change to e.g. intData() or boolData()
+    Serial.println(fireString);
+  
+      if (fireString == "ON") {                    // compare the input of status received from firebase
+        Serial.println("WATERING TURNED ON");
+        analogWrite(outputpin, 200);               // make output ON
+      }
+  
+      else if (fireString == "OFF") {              // compare the input of status received from firebase
+        Serial.println("WATERING TURNED OFF");
+        analogWrite(outputpin, 0);                // make output OFF
+      }
+      delay(1000); // do this (check watering status from web interface's buttons) every second
+  
+    if (Firebase.ready() && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)){ //every minute (60000), do this
+      sendDataPrevMillis = millis();
+      Serial.println(millis());
+  
+      if(minutes >=3){ // once a day (1440), do the following:
+        days_since_watered++;
+        if(photomax < 2000){  // if it was sunny today (i.e. photoresistor value read less than 2000 at some point)
+          turn_motor(); // rotate the plant platform
+        }
+  
+        Firebase.get(firebaseData, "/WATERING_INTERVAL");                     // check watering status input from firebase
+        fireString = firebaseData.stringData();
+        Serial.println(fireString);
+  
+        if(days_since_watered >= fireString.toInt()){ // if it's been enough days since last water
+          water(); //water the plant
+          days_since_watered = 0;
+        }
+  
+        Firebase.set(firebaseData, "/DAYS_SINCE_WATERED", String(days_since_watered));
+        minutes = 0; // reset the minute count each day
+        photomax = 4095; // reset photomax each day
+      }
+      photo = analogRead(readout);
+      // print out the value you read:
+      Serial.println(photo);
+      // Write an Int number on the database path test/int
+      if(photo < photomax){
+        photomax = photo;
+      }
+      Firebase.set(firebaseData, "/LIGHT", String(photo));
+      minutes++;
+      Firebase.set(firebaseData, "/MIN", String(minutes));
+    }
+  }</code></pre>
 
 
+<h4>Setting up the web interface and Firebase</h4>
+
+Check out the web interface (which I can use to control the pump remotely) [here](./plantpage.html).
+
+I really wanted to use Firebase because I wanted to be able to control my plant remotely, or from anywhere in the world. I set it up using the [Week 9 Firebase tutorial from the PS70 website](https://nathanmelenbrink.github.io/ps70/09_networking/index.html), and I edited the example to change it from turning an LED on and off to turning my pump on and off. It changed the variable "WATERING STATUS" to "ON" or "OFF".
+<pre><code class="language-arduino">
+    #include <WiFi.h>                                 // esp32 library
+    #include <FirebaseESP32.h>                        // firebase library
+
+    #define FIREBASE_HOST "https://ps70-plant-control-default-rtdb.firebaseio.com/"  // the project name address from firebase id
+    #define FIREBASE_AUTH "AIzaSyBBoCe4WbiV_CF_Wn2DCn88BemzeozxDrQ"                  // the secret key generated from firebase
+    #define WIFI_SSID "MAKERSPACE"                                    // input your home or public wifi name
+    #define WIFI_PASSWORD "12345678"                                // password of wifi ssid
+
+    String fireString = "";                                          // status received from firebase
+    int outputpin = 14;
+
+    //Define FirebaseESP32 data object
+    FirebaseData firebaseData;
+
+    void setup() {
+      Serial.begin(115200);
+      delay(1000);
+      pinMode(outputpin, OUTPUT);
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);                          // try to connect with wifi
+
+      Serial.print("Connecting to ");
+      Serial.print(WIFI_SSID);
+      while (WiFi.status() != WL_CONNECTED) {
+        Serial.print(".");
+        delay(500);
+      }
+
+      Serial.println();
+      Serial.print("Connected to ");
+      Serial.println(WIFI_SSID);
+      Serial.print("IP Address is : ");
+      Serial.println(WiFi.localIP());                                // print local IP address
+      Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);                  // connect to firebase
+      Firebase.reconnectWiFi(true);
+      Firebase.set(firebaseData, "/WATERING_STATUS", "OFF");              // set initial string of "OFF"
+    }
+
+    void loop() {
+
+      Firebase.get(firebaseData, "/WATERING_STATUS");                     // get watering status input from firebase
+      fireString = firebaseData.stringData();                        // change to e.g. intData() or boolData()
+      Serial.println(fireString);
+
+      if (fireString == "ON") {                    // compare the input of status received from firebase
+        Serial.println("WATERING TURNED ON");
+        digitalWrite(outputpin, HIGH); 
+        
+      analogWrite(outputpin, 200);               // make output ON
+      }
+
+      else if (fireString == "OFF") {              // compare the input of status received from firebase
+        Serial.println("WATERING TURNED OFF");
+        digitalWrite(outputpin, LOW); 
+        
+      analogWrite(outputpin, 0);                // make output OFF
+      }
+
+      else {
+        Serial.println("Please send ON/OFF");
+      }
+
+      delay(1000);                                 // not strictly necessary
+    }
+</code></pre>
+
+This code was later integrated with code controlling the stepper motor/turntable and turned into the final code above.
+
+The ESP32 code checks this variable every second, so I can turn the pump on or off from anywhere in the world through the web interface, and it will turn the pump on or off within a second. Pretty cool, huh?
+
+I also wanted to be able to change the watering schedule of my plant, so I added a slider to update a value which would determine the watering frequency. I used a tutorial from [W3schools](https://www.w3schools.com/howto/howto_js_rangeslider.asp) to do this (shoutout Chase for referring me to this tutorial and his documentation, since he had used it before).
+
+Here's an image of what the Firebase interface looks like while the code runs (things are highlighted when they've just been updated):
 <br>
-<h5>Takeaways</h5>
+<img src='firebase_ss.png' width="500px" position="relate">
+<br>
+<br>
+<h4>Watering</h4>
+
+The name of the game is watering, and the easiest way to do that was by using a pump. I used a 030 micro water pump which flows at 0.4L/minute (though in practice, less than that) because it was what was available in the lab.
+
+I wired up the pump to be controlled by output pin 14 on the ESP32 using a transistor as follows:
+<br>
+<img src='pumpwiring_labelled.png' width="500px" position="relate">
 <br>
 
+I soldered the wires to the pump to secure them, and then I attached plastic tubes onto the pump for the water to flow through.
+
+Here's a video of the web interface buttons controlling the pump/watering.
+<video width="800px" controls>
+  <source src="waterdemo.mp4" type="video/mp4">
+</video>
+<br>
+<h4>Turning</h4>
+
+The wiring for the stepper motor is as follows.
+<br>
+<img src='espwiring.jpg' width="600px" position="relate">
+<br>
+
+Here's a stand-in plant I used to test the turntable.
+<br>
+<img src='mocksetup.jpg' width="600px" position="relate">
+<br>
+
+Here's a demonstration of the platform turning in response to light on a shortened time scale (i.e. a minute = a second, a day = 6 seconds). In the actual, non-demo code, it turns each day when there was a lot of light - so here, it turns whenever there was sufficient light in the last 6 second period.
+<br>
+<video width="800px" controls>
+  <source src="turndemo.mp4" type="video/mp4">
+</video>
+
+
+
+<h3>The Process - major roadblocks</h3>
+
+To start out, I made a box. (I went through several iterations of this box because I got confused on how to account for kerf as I added more notches.)
+<br>
+<img src='box.jpg' width="600px" position="relate">
+<br>
+
+When setting up Firebase, I was trying to debug the Firebase-pump connection for many, many hours - hence why I was using a transistor. I think it ended up being a digital instead of analog issue.
+<br>
+I spent lots of time trying to figure out why my combined watering and turntable code wouldn't work. I deleted and redownloaded all sorts of libraries and packages. I think they used two different ESP32 libraries that weren't compatible, so I had to rewrite half my code to adjust for that and avoid errors. That was a very significant chunk of time.
+<br>
+This project was definitely 95% debugging, 5% implementing. I had to go line by line many times, which was frustrating, but I now know how to struggle a bit more efficiently.
 <br>
 
 Click [here](../index.html) to return to the homepage.
