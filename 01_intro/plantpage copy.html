@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.slidecontainer {
+  width: 100%;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<h1>Plant Interface</h1>
+
+
+<h5> Controls </h5>
+
+<button id="turn-on" name="turnon">Start Watering</button>
+<button id="turn-off" name="turnoff">Stop Watering</button>
+<br>
+<br>
+
+<p>Drag the slider to update the plant watering schedule.</p>
+
+<div class="slidecontainer">
+  <input type="range" min="1" max="14" value="8" class="slider" id="myRange">
+  <p>Value: <span id="demo"></span></p>
+</div>
+
+
+<h5> Stats </h5>
+<br>
+Current watering schedule: 
+<br>
+Days since last water:
+<br>
+
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/7.13.2/firebase-app.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/7.13.2/firebase-database.js"></script>
+
+<script>
+// Your web app's Firebase configuration
+var firebaseConfig = {
+    apiKey: "AIzaSyBBoCe4WbiV_CF_Wn2DCn88BemzeozxDrQ",
+    authDomain: "ps70-plant-control.firebaseapp.com",
+    databaseURL: "https://ps70-plant-control-default-rtdb.firebaseio.com",
+    projectId: "ps70-plant-control",
+    storageBucket: "ps70-plant-control.appspot.com",
+    messagingSenderId: "144519052582",
+    appId: "1:144519052582:web:d1a6c5056dbdaa12de15e7"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+firebase.analytics();
+
+// Get a database reference to our blog
+var ref = firebase.database().ref("/");
+// var database = firebase.database();
+
+// make the buttons call the function below 
+document.getElementById('turn-on').addEventListener('click', turnOn, false);
+document.getElementById('turn-off').addEventListener('click', turnOff, false);
+document.getElementById("pointsId").addEventListener('input', setInterval, false);
+
+function turnOn(){
+    console.log("turning on");
+    ref.update({
+        "WATERING_STATUS": "ON"
+    });
+}
+
+function turnOff(){
+    console.log("turning off");
+    ref.update({
+        "WATERING_STATUS": "OFF"
+    });
+}    
+
+function setInterval(){
+    console.log("setting interval");
+    ref.update({
+        "WATERING_INTERVAL": parseInt(this.value)});
+        output.innerHTML = this.value;
+}
+</script>
+
+<script>
+    var slider = document.getElementById("myRange");
+    var output = document.getElementById("demo");
+    output.innerHTML = slider.value;
+    
+    slider.oninput = function() {
+      output.innerHTML = this.value;
+    }
+</script>
+
+
+</body>
+</html>
