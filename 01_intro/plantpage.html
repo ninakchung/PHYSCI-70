@@ -95,15 +95,7 @@
 
 	// Get a database reference to our blog
 	var ref = firebase.database().ref("/");
-	// var database = firebase.database();
-
-    var slider = document.getElementById("pointsId");
-    var output = document.getElementById("days");
-    output.innerHTML = slider.value;
-
-    slider.oninput = function() {
-        output.innerHTML = this.value;
-    }
+	var database = firebase.database();
 
 	// make the buttons call the function below 
 	document.getElementById('turn-on').addEventListener('click', turnOn, false);
@@ -132,6 +124,17 @@
 	}
 
 
+</script>
+
+<script>
+    var slider = document.getElementById("pointsId");
+    var output = document.getElementById("days");
+    output.innerHTML = slider.value; //display default slider value
+    
+    //update current slider value each time you drag the slider handle
+    slider.oninput = function() {
+      output.innerHTML = this.value;
+    }
 </script>
 
 </body>
