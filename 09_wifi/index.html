@@ -33,7 +33,7 @@
 #### Week 9: Wifi/Bluetooth/IOT
 
 <br>
-This week, I tried to make two ESP32s communicate. So many things went wrong and we never actually got it working, but not without significant struggle!
+This week (and in the following weeks too), I tried to make two ESP32s communicate via ESP-NOW. So many things went wrong and we never actually got it working, but not without significant struggle!
 
 Our original goal was to scrape a cat fact from the cat facts API and display that on the screen connected to Allison's ESP32 when a button was pressed. However, the cat facts API required authentication, so we switched to a random facts API with no required authentication instead.
 
@@ -209,7 +209,7 @@ This code went through several iterations, but here was the final version. See A
 <br>
 <h5>Takeaways</h5>
 
-We revisited this project several times in the following weeks of the class. We never ended up being able to successfully communicate the correct scraped value from one ESP32 to the other. We were the only group doing an ESP Now based project this week, so we couldn't troubleshoot with any other groups.
+We revisited this project several times in the following weeks of the class. We never ended up being able to successfully communicate the correct scraped value from one ESP32 to the other. We were the only group doing an ESP-NOW based project this week, so we couldn't troubleshoot with any other groups.
 
 We tried several different strategies to troubleshoot, including simpliying code over and over again. We went from sending a structured message with multiple elements to a structured message with one element to just a fixed int. I think we were able to send and receive signals when they were just fixed ints and floats, but for some reason, we couldn't get the weather number (which was variable and scraped from an API) to go through. We even tried switching out ESPs.
 
