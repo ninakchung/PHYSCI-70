@@ -33,14 +33,17 @@
 #### Week 9: Wifi/Bluetooth/IOT
 
 <br>
-This week, I tried to make two ESP32s communicate. 
+This week, I tried to make two ESP32s communicate. So many things went wrong and we never actually got it working, but not without significant struggle!
 
 Our original goal was to scrape a cat fact from the cat facts API and display that on the screen connected to Allison's ESP32 when a button was pressed. However, the cat facts API required authentication, so we switched to a random facts API with no required authentication instead.
 
 We were set to have one ESP32 send a signal to the other, which would activate a screen to display a random fact.
 
-We 3D printed a model of a cat to go with it, which was supposed to be holding the button, but we didn't end up being able to hook it up to the circuit in time.
+We 3D printed a model of a cat to go with it, which was supposed to be holding the button, but we didn't end up being able to hook it up to the circuit in time. Anna also got injured and couldn't come in to work on that part with us, so we didn't end up attaching it.
 
+First, we realized there was an issue with sharing strings between them (We came to realize that they couldn't share strings over a certain character length, I think it was around 9 characters).
+
+Then we went from sharing strings to just sharing numbers, scraping the temperature from the weather API on the course website. And even still we couldn't do that. After troubleshooting on my end to scrape the correct number (current temperature in Fahrenheit in Boston), it sent successfully to Allison's, but Allison's ESP just read out 0's. 
 
 <h5>ESP32 Setup</h5>
 
@@ -49,8 +52,12 @@ Using code from a [RandomNerd tutorial](https://randomnerdtutorials.com/esp-now-
 <br>
 <img src='esp32.jpg' width="600px" position="relate">
 <br>
+
+This code went through several iterations, but here was the final version. See Allison's website for her ESP's code.
+
 <br>
 <h5>ESP32-NOW Code</h5>
+
 <pre><code class="language-arduino">
     #include <esp_now.h>
     #include <WiFi.h>
@@ -60,16 +67,19 @@ Using code from a [RandomNerd tutorial](https://randomnerdtutorials.com/esp-now-
     #include <Adafruit_GFX.h>
     #include <Adafruit_SSD1306.h>
     
+    const int buttonPin = 18;
+    int buttonState = 0;
+    const char* ssid = "MAKERSPACE";
+    const char* password =  "12345678";
+    
+    
     // REPLACE WITH THE MAC Address of your receiver 
     uint8_t broadcastAddress[] = {0xEC, 0x62, 0x60, 0x91, 0x94, 0xA8}; //Allison's ESP address
     
-    const String endpoint = "https://uselessfacts.jsph.pl/random.json?language=en";
+    const String endpoint = "https://api.weather.gov/gridpoints/BOX/76,74/forecast";
     
     String OGcatfact = "Cats have 9 lives.";
-    
-    //CAT FACT RETRIEVE
-    //go to cat fact API and get a random cat fact... returning a default 9 lives fact for now as a placeholder
-    //maybe something like char catfact = getcatfact();
+    float temperature;
     
     // Define variables to store fact to be sent
     String pushagain = "Push button for more facts!";
@@ -78,16 +88,18 @@ Using code from a [RandomNerd tutorial](https://randomnerdtutorials.com/esp-now-
     
     // Variable to store if sending data was successful
     String success;
+    String catFact;
     
     //Structure example to send data
     //Must match the receiver structure
     typedef struct struct_message {
-        String catfact;
-        String pushagain;
+        // String catfact;
+        // String pushagain;
+        float temp;
     } struct_message;
     
     // Create a struct_message to hold message with new fact
-    struct_message FactMessage;
+    struct_message incomingReadings;
     
     esp_now_peer_info_t peerInfo;
     
@@ -106,9 +118,19 @@ Using code from a [RandomNerd tutorial](https://randomnerdtutorials.com/esp-now-
      
     void setup() {
       Serial.begin(115200);
-      Serial.println("Setting up");
+      WiFi.begin(ssid, password);
+    
+      while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi..");
+      }
+    
+      Serial.println("Connected to the WiFi network");
       // Set device as a Wi-Fi Station
       WiFi.mode(WIFI_STA);
+    
+      //Initialize button pin
+      pinMode(buttonPin, INPUT);
     
       // Init ESP-NOW
       if (esp_now_init() != ESP_OK) {
@@ -121,10 +143,10 @@ Using code from a [RandomNerd tutorial](https://randomnerdtutorials.com/esp-now-
       esp_now_register_send_cb(OnDataSent);
       
       // Register peer
+      memset(&peerInfo, 0, sizeof(peerInfo));
       memcpy(peerInfo.peer_addr, broadcastAddress, 6);
       peerInfo.channel = 0;
       peerInfo.encrypt = false;
-      
       // Add peer        
       if (esp_now_add_peer(&peerInfo) != ESP_OK){
         Serial.println("Failed to add peer");
@@ -133,34 +155,67 @@ Using code from a [RandomNerd tutorial](https://randomnerdtutorials.com/esp-now-
     }
      
     void loop() {
-      Serial.println("Starting loop");
+      //Read button state
+      buttonState = digitalRead(buttonPin);
     
-      //getReadings();
-      //getcatfact(); 
-      // // Set values to send
-      FactMessage.catfact = OGcatfact;
-      //FactMessage.pushagain = pushagain;
-    
+      if ((WiFi.status() == WL_CONNECTED)) { //Check the current connection status
+        Serial.println("connected to Wifi");
+        HTTPClient http;
+        http.begin(endpoint); //Specify the URL
+        int httpCode = http.GET();  //Make the request
+        if (httpCode > 0) { //Check for the returning code
+          String payload = http.getString();
+          Serial.println(httpCode);
+          DynamicJsonDocument doc(10000); // Create a buffer of 10000 bytes
+          // Deserialize the JSON document
+          DeserializationError error = deserializeJson(doc, payload);
+          // Test if parsing succeeds.
+          if (error) {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.c_str());
+            return;
+          }
+          const int temp = doc["properties"]["periods"][0]["temperature"];
+          incomingReadings.temp = temp;
+          // Navigate through JSON document, extracting some values
+          Serial.println("All I care about is the current weather, which is ");
+          Serial.println(temp);
+        }
+        http.end(); //Free the resources
+      }
+      delay(1000);
+
       // Send message via ESP-NOW
-      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &FactMessage, sizeof(FactMessage));
-       
-      if (result == ESP_OK) {
-        Serial.println("Sent with success");
-        Serial.println(FactMessage.catfact);
-        Serial.println(pushagain);
+      
+      if (buttonState == HIGH) {
+        Serial.println("button pressed ");
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &incomingReadings, sizeof(incomingReadings));
+        if (result == ESP_OK) {
+          Serial.println("Sent with success");
+          //Serial.println(pushagain);
+          Serial.println(incomingReadings.temp);  
+        }
+        else {
+          Serial.println("Error sending the data");
+          Serial.println(incomingReadings.temp);
+        }
       }
       else {
-        Serial.println("Error sending the data");
+        Serial.println("off");
       }
-      delay(10000);
+      delay(1000);
     }
 </code></pre> 
 <br>
 <h5>Takeaways</h5>
-<br>
 
-Wifi is hard. Bluetooth is harder.
-<br>
+We revisited this project several times in the following weeks of the class. We never ended up being able to successfully communicate the correct scraped value from one ESP32 to the other. We were the only group doing an ESP Now based project this week, so we couldn't troubleshoot with any other groups.
+
+We tried several different strategies to troubleshoot, including simpliying code over and over again. We went from sending a structured message with multiple elements to a structured message with one element to just a fixed int. I think we were able to send and receive signals when they were just fixed ints and floats, but for some reason, we couldn't get the weather number (which was variable and scraped from an API) to go through. We even tried switching out ESPs.
+
+After 10+ hours of troubleshooting during class and labs, we ditched it and worked on our final projects. Allison had a screen working and everything (wired up too), but it didn't get used much since we had so many issues receiving the signal on her ESP 32.
+
+All in all, I was able to write code that successfully scraped a value from an API and sent it to another ESP, but we weren't able to properly receive and display it on the other ESP. And I struggled a lot. Woohoo!
 
 Click [here](../index.html) to return to the homepage.
 

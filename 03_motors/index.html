@@ -47,7 +47,9 @@ I designed a gear and an oval in Fusion to attach to the 12.8mm diameter dowel, 
 
 I then hooked up my motor to the contraption and connected it to the gear that turns the dowel.
 
-When the dowel turns, the stick with the whale shark on it goes up and down. Ideally, anyway!!
+When the dowel turns, the stick with the whale shark was supposed to go up and down.
+
+
 
 Here are some of the sketches I used for the sculpture that I modeled in Fusion 360.
 
@@ -55,7 +57,81 @@ Here are some of the sketches I used for the sculpture that I modeled in Fusion 
 
 <img src='gearSS.png' width="500px">
 
-To be honest, I didn't have much time this week to work on this, so I'll be adding a video of it once I get it working a bit better.
+
+<br>
+
+### Week 10 - Kinetic Sculpture Revisit
+<br>
+I didn't end up getting my kinetic sculpture working perfectly, so I revisited it using a stepper motor in Week 10. I redesigned it by adding a top to the box that had a hole in the center for the stepper motor to poke out of, and I attached a circular platform to it which turned when the stepper motor did. Here's a video of the whale shark on it (plus the box went through more iterations to fix some imperfect kerf calculations, and now fits together much better than it did in Week 3)
+<video width="600px" controls>
+<source src="../10_steppers/whaleshark-turning.mp4" type="video/mp4">
+</video>
+
+And here's the code that was used for the stepper motor control:
+<pre><code class="language-arduino">
+int Aplus = 11;
+int Aminus = 10;
+int Bplus = 9;
+int Bminus = 8;
+
+uint16_t step_count = 0;
+
+void setup() {
+  pinMode(Aplus, OUTPUT);
+  pinMode(Aminus, OUTPUT);
+  pinMode(Bplus, OUTPUT);
+  pinMode(Bminus, OUTPUT);
+}
+
+void pulse_0(){
+  digitalWrite(Aplus,1);
+  digitalWrite(Bplus,1);
+}
+
+void pulse_1(){
+  digitalWrite(Aminus,1);
+  digitalWrite(Bplus,1);
+}
+
+void pulse_2(){
+  digitalWrite(Aminus,1);
+  digitalWrite(Bminus,1);
+}
+
+void pulse_3(){
+  digitalWrite(Aplus,1);
+  digitalWrite(Bminus,1);
+}
+
+void all_off() {
+  digitalWrite(Aplus,0);
+  digitalWrite(Aminus,0);
+  digitalWrite(Bplus,0);
+  digitalWrite(Bminus,0);
+}
+
+void loop() {
+
+  all_off(); // turn off coils before sending new step.
+
+  step_count++;
+  step_count = step_count%4;
+
+  if (step_count == 0) pulse_0();
+  if (step_count == 1) pulse_1();
+  if (step_count == 2) pulse_2();
+  if (step_count == 3) pulse_3();  
+
+  delay(10);  // too short and motor will skip steps
+
+  if (step_count == 3) {
+    delay(30); 
+  }
+ }
+</code></pre>
+<br>
+
+All in all, a successful revision for my whale shark!
 
 Click [here](../index.html) to return to the homepage.
 
